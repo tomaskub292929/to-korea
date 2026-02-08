@@ -1,26 +1,113 @@
 @import "tailwindcss";
 
+/* Gateway to Korea - Leica Design System */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary Colors */
+  --leica-orange: #FF8C00;
+  --leica-gold: #FFB347;
+
+  /* Secondary Colors */
+  --soft-yellow: #FFF8DC;
+  --deep-navy: #1A1A2E;
+  --warm-gray: #7A7A7A;
+
+  /* Accent Colors */
+  --success: #4CAF50;
+  --alert: #FF6B6B;
+  --info: #2196F3;
+
+  /* Background Colors */
+  --off-white: #FAFAF8;
+  --light-cream: #FFF9F0;
+
+  /* App Colors */
+  --background: var(--off-white);
+  --foreground: var(--deep-navy);
 }
 
 @theme inline {
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  --color-leica-orange: var(--leica-orange);
+  --color-leica-gold: var(--leica-gold);
+  --color-soft-yellow: var(--soft-yellow);
+  --color-deep-navy: var(--deep-navy);
+  --color-warm-gray: var(--warm-gray);
+  --color-success: var(--success);
+  --color-alert: var(--alert);
+  --color-info: var(--info);
+  --color-off-white: var(--off-white);
+  --color-light-cream: var(--light-cream);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-serif: Georgia, "Playfair Display", serif;
   --font-mono: var(--font-geist-mono);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Typography Scale */
+h1, .h1 {
+  font-family: Georgia, "Playfair Display", serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--deep-navy);
 }
 
+h2, .h2 {
+  font-family: Georgia, "Playfair Display", serif;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--leica-orange);
+}
+
+h3, .h3 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--deep-navy);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  h1, .h1 { font-size: 32px; }
+  h2, .h2 { font-size: 24px; }
+  h3, .h3 { font-size: 18px; }
+}
+
+/* Body */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--leica-orange);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--leica-gold);
+  color: var(--deep-navy);
 }
