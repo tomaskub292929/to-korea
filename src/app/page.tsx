@@ -6,13 +6,32 @@ import { HeroSection } from '@/components/home/HeroSection';
 import { StatsSection } from '@/components/home/StatsSection';
 import { SchoolFilter } from '@/components/school/SchoolFilter';
 import { SchoolGrid } from '@/components/school/SchoolGrid';
+import { subscribeToSchools } from '@/lib/services/schoolService';
+import { School } from '@/lib/types';
 import { mockSchools, filterSchools } from '@/data/schools';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
-  const [filteredSchools, setFilteredSchools] = useState(mockSchools);
+  const [filteredSchools, setFilteredSchools] = useState<School[]>([]);
+  const [allSchools, setAllSchools] = useState<School[]>([]);
+
+  // Calculate stats dynamically
+  const stats = {
+    totalSchools: allSchools.length,
+    totalStudents: allSchools.reduce((acc, school) => acc + (school.studentCount || 0), 0),
+    programsCount: new Set(allSchools.flatMap(s => s.programs || [])).size,
+  };
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const unsubscribe = subscribeToSchools((schools) => {
+      setAllSchools(schools);
+      setFilteredSchools(schools);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleFilterChange = useCallback((filters: {
     search: string;
@@ -21,7 +40,7 @@ export default function Home() {
     jobOpportunityLevel: string[];
     minRating: number;
   }) => {
-    const result = filterSchools(mockSchools, {
+    const result = filterSchools(allSchools, {
       search: filters.search,
       region: filters.region || undefined,
       programs: filters.programs.length > 0 ? filters.programs : undefined,
@@ -29,7 +48,7 @@ export default function Home() {
       minRating: filters.minRating > 0 ? filters.minRating : undefined,
     });
     setFilteredSchools(result);
-  }, []);
+  }, [allSchools]);
 
   return (
     <div className="min-h-screen bg-[var(--off-white)]">
@@ -40,7 +59,7 @@ export default function Home() {
       <HeroSection />
 
       {/* Stats Section */}
-      <StatsSection />
+      <StatsSection stats={stats} />
 
       {/* Schools Section */}
       <section className="py-16">

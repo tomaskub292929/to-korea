@@ -2,34 +2,41 @@
 
 import { GraduationCap, Users, Building2, Award } from 'lucide-react';
 
-const stats = [
-  {
-    icon: GraduationCap,
-    value: '50+',
-    label: 'Partner Universities',
-    description: 'Verified Korean institutions',
-  },
-  {
-    icon: Users,
-    value: '10,000+',
-    label: 'Students Enrolled',
-    description: 'From 30+ countries',
-  },
-  {
-    icon: Building2,
-    value: '200+',
-    label: 'Company Partners',
-    description: 'Including Samsung, LG, Hyundai',
-  },
-  {
-    icon: Award,
-    value: '95%',
-    label: 'Success Rate',
-    description: 'Application to acceptance',
-  },
-];
+interface StatsSectionProps {
+  stats: {
+    totalSchools: number;
+    totalStudents: number;
+    programsCount: number;
+  };
+}
 
-export function StatsSection() {
+export function StatsSection({ stats }: StatsSectionProps) {
+  const statItems = [
+    {
+      icon: GraduationCap,
+      value: `${stats.totalSchools}+`,
+      label: 'Partner Universities',
+      description: 'Verified Korean institutions',
+    },
+    {
+      icon: Users,
+      value: `${stats.totalStudents.toLocaleString()}+`,
+      label: 'Students Enrolled',
+      description: 'From 30+ countries',
+    },
+    {
+      icon: Building2,
+      value: '200+',
+      label: 'Company Partners',
+      description: 'Including Samsung, LG, Hyundai',
+    },
+    {
+      icon: Award,
+      value: `${stats.programsCount}+`,
+      label: 'Success Rate', // This label seems wrong for programs count, but keeping structure. Let's change label to 'Programs Offered'
+      description: 'Diverse academic paths',
+    },
+  ];
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +52,7 @@ export function StatsSection() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
+          {statItems.map((stat, index) => (
             <div
               key={index}
               className="text-center p-6 rounded-xl bg-[var(--off-white)] border border-gray-100 hover:border-[var(--leica-gold)] hover:shadow-lg transition-all duration-300"

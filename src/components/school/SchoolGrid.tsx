@@ -37,13 +37,13 @@ export function SchoolGrid({ schools, isLoading = false }: SchoolGridProps) {
 
   if (schools.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="text-6xl mb-4">🔍</div>
+      <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
+        <div className="text-6xl mb-4">🏫</div>
         <h3 className="text-xl font-semibold text-[var(--deep-navy)] mb-2">
-          No schools found
+          No schools registered yet
         </h3>
         <p className="text-[var(--warm-gray)]">
-          Try adjusting your filters or search criteria
+          Visit the admin panel to add the first university.
         </p>
       </div>
     );
