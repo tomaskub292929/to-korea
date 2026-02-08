@@ -21,7 +21,7 @@ const COLLECTION_NAME = 'schools';
  */
 export async function getAllSchools(): Promise<School[]> {
     try {
-        const q = query(collection(db, COLLECTION_NAME), orderBy('name'));
+        const q = query(collection(db, COLLECTION_NAME));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({
             id: doc.id,
@@ -101,7 +101,7 @@ export async function deleteSchool(id: string): Promise<void> {
  * Returns an unsubscribe function
  */
 export function subscribeToSchools(callback: (schools: School[]) => void): () => void {
-    const q = query(collection(db, COLLECTION_NAME), orderBy('name'));
+    const q = query(collection(db, COLLECTION_NAME));
 
     return onSnapshot(q, (snapshot) => {
         const schools = snapshot.docs.map(doc => ({
