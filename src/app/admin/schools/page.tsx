@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal, Plus, Star, CheckCircle, XCircle, Edit, Trash2, Eye } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/layout';
 import { DataTable } from '@/components/admin/tables/DataTable';
-import { mockSchools } from '@/data/schools';
+import { subscribeToSchools, deleteSchool } from '@/lib/services/schoolService';
+import { School } from '@/lib/types';
 
 interface SchoolRow {
   id: string;
@@ -20,20 +21,46 @@ interface SchoolRow {
   isActive: boolean;
 }
 
-// Transform mock data
-const schoolsData: SchoolRow[] = mockSchools.map((school) => ({
-  id: school.id,
-  name: school.name,
-  city: school.city,
-  rating: school.rating,
-  studentCount: school.studentCount,
-  programs: school.programs,
-  jobOpportunityLevel: school.jobOpportunityLevel,
-  isVerified: true, // Mock data
-  isActive: true, // Mock data
-}));
-
 export default function SchoolsPage() {
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Subscribe to real-time updates from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeToSchools((updatedSchools) => {
+      setSchools(updatedSchools);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Transform data for table
+  const schoolsData: SchoolRow[] = useMemo(() =>
+    schools.map((school) => ({
+      id: school.id,
+      name: school.name,
+      city: school.city,
+      rating: school.rating,
+      studentCount: school.studentCount,
+      programs: school.programs,
+      jobOpportunityLevel: school.jobOpportunityLevel,
+      isVerified: true,
+      isActive: true,
+    })),
+    [schools]
+  );
+
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+      try {
+        await deleteSchool(id);
+        alert('✅ School deleted successfully!');
+      } catch (error) {
+        alert('❌ Failed to delete school');
+      }
+    }
+  };
   const columns = useMemo<ColumnDef<SchoolRow>[]>(
     () => [
       {
@@ -132,11 +159,10 @@ export default function SchoolsPage() {
         header: 'Status',
         cell: ({ row }) => (
           <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              row.original.isActive
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-600'
-            }`}
+            className={`px-2 py-1 text-xs font-medium rounded-full ${row.original.isActive
+              ? 'bg-green-100 text-green-700'
+              : 'bg-gray-100 text-gray-600'
+              }`}
           >
             {row.original.isActive ? 'Active' : 'Inactive'}
           </span>
@@ -162,7 +188,11 @@ export default function SchoolsPage() {
             >
               <Edit className="w-4 h-4 text-gray-500" />
             </Link>
-            <button className="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+            <button
+              onClick={() => handleDelete(row.original.id, row.original.name)}
+              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
               <Trash2 className="w-4 h-4 text-red-500" />
             </button>
           </div>
@@ -206,11 +236,18 @@ export default function SchoolsPage() {
       </div>
 
       {/* Data Table */}
-      <DataTable
-        data={schoolsData}
-        columns={columns}
-        searchPlaceholder="Search schools..."
-      />
+      {loading ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--leica-orange)]"></div>
+          <p className="mt-4 text-gray-500">Loading schools...</p>
+        </div>
+      ) : (
+        <DataTable
+          data={schoolsData}
+          columns={columns}
+          searchPlaceholder="Search schools..."
+        />
+      )}
     </AdminLayout>
   );
 }

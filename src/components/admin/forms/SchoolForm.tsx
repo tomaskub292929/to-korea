@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Upload, X, Plus } from 'lucide-react';
+import { createSchool, updateSchool } from '@/lib/services/schoolService';
+import { School } from '@/lib/types';
 
 interface SchoolFormProps {
   initialData?: {
@@ -33,10 +36,13 @@ const availablePrograms = [
 ];
 
 export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'en' | 'ru' | 'de'>('en');
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>(
     initialData?.programs || []
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleProgram = (program: string) => {
     setSelectedPrograms((prev) =>
@@ -46,8 +52,93 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
     );
   };
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+
+      // Helper function to get value or undefined (not empty string)
+      const getValue = (key: string): string | undefined => {
+        const value = formData.get(key) as string;
+        return value && value.trim() !== '' ? value : undefined;
+      };
+
+      const getNumberValue = (key: string): number | undefined => {
+        const value = formData.get(key) as string;
+        const num = parseInt(value);
+        return !isNaN(num) && num > 0 ? num : undefined;
+      };
+
+      // Build school data object, only including defined values
+      const schoolData: any = {
+        name: getValue('name')!,
+        country: getValue('country')!,
+        city: getValue('city')!,
+        websiteUrl: getValue('websiteUrl')!,
+        description: getValue('description')!,
+        programs: selectedPrograms,
+        jobOpportunityLevel: getValue('jobOpportunityLevel') as 'high' | 'medium' | 'low',
+        studentCount: getNumberValue('studentCount') || 0,
+        rating: 4.5,
+        logoUrl: '/images/schools/default-logo.png',
+        headerImageUrl: 'https://images.unsplash.com/photo-1562774053-701939374585?w=800',
+        region: 'western-europe',
+        oneLineFeedback: '',
+      };
+
+      // Only add optional fields if they have values
+      const nameRu = getValue('nameRu');
+      if (nameRu) schoolData.nameRu = nameRu;
+
+      const nameDe = getValue('nameDe');
+      if (nameDe) schoolData.nameDe = nameDe;
+
+      const descriptionRu = getValue('descriptionRu');
+      if (descriptionRu) schoolData.descriptionRu = descriptionRu;
+
+      const descriptionDe = getValue('descriptionDe');
+      if (descriptionDe) schoolData.descriptionDe = descriptionDe;
+
+      const tuitionFee = getNumberValue('tuitionFee');
+      if (tuitionFee) schoolData.tuitionFee = tuitionFee;
+
+      const applicationDeadline = getValue('applicationDeadline');
+      if (applicationDeadline) schoolData.applicationDeadline = applicationDeadline;
+
+      if (isEdit && initialData) {
+        // Update existing school
+        const schoolId = (initialData as any).id;
+        await updateSchool(schoolId, schoolData);
+        alert('✅ School updated successfully!');
+      } else {
+        // Create new school
+        await createSchool(schoolData);
+        alert('✅ School created successfully!');
+      }
+
+      router.push('/admin/schools');
+      router.refresh();
+    } catch (err) {
+      console.error('Error saving school:', err);
+      setError('Failed to save school. Please try again.');
+      alert('❌ Error: ' + (err as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
       {/* Back Button */}
       <Link
         href="/admin/schools"
@@ -74,11 +165,10 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as 'en' | 'ru' | 'de')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-[var(--leica-orange)] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
+                    ? 'bg-[var(--leica-orange)] text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -92,15 +182,17 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 </label>
                 <input
                   type="text"
+                  name={activeTab === 'en' ? 'name' : activeTab === 'ru' ? 'nameRu' : 'nameDe'}
                   defaultValue={
                     activeTab === 'en'
                       ? initialData?.name
                       : activeTab === 'ru'
-                      ? initialData?.nameRu
-                      : initialData?.nameDe
+                        ? initialData?.nameRu
+                        : initialData?.nameDe
                   }
                   placeholder={`School name in ${activeTab.toUpperCase()}`}
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--leica-orange)]"
+                  required={activeTab === 'en'}
                 />
               </div>
 
@@ -110,15 +202,17 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 </label>
                 <textarea
                   rows={4}
+                  name={activeTab === 'en' ? 'description' : activeTab === 'ru' ? 'descriptionRu' : 'descriptionDe'}
                   defaultValue={
                     activeTab === 'en'
                       ? initialData?.description
                       : activeTab === 'ru'
-                      ? initialData?.descriptionRu
-                      : initialData?.descriptionDe
+                        ? initialData?.descriptionRu
+                        : initialData?.descriptionDe
                   }
                   placeholder={`Description in ${activeTab.toUpperCase()} (300-500 characters recommended)`}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--leica-orange)] resize-none"
+                  required={activeTab === 'en'}
                 />
               </div>
             </div>
@@ -133,8 +227,10 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                   Country <span className="text-red-500">*</span>
                 </label>
                 <select
+                  name="country"
                   defaultValue={initialData?.country || 'South Korea'}
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
+                  required
                 >
                   <option value="South Korea">South Korea</option>
                 </select>
@@ -144,8 +240,10 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                   City <span className="text-red-500">*</span>
                 </label>
                 <select
+                  name="city"
                   defaultValue={initialData?.city}
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
+                  required
                 >
                   <option value="">Select city</option>
                   <option value="Seoul">Seoul</option>
@@ -162,9 +260,11 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 </label>
                 <input
                   type="url"
+                  name="websiteUrl"
                   defaultValue={initialData?.websiteUrl}
                   placeholder="https://www.example.ac.kr"
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
+                  required
                 />
               </div>
             </div>
@@ -178,11 +278,10 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 <button
                   key={program}
                   onClick={() => toggleProgram(program)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    selectedPrograms.includes(program)
-                      ? 'bg-[var(--leica-orange)] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedPrograms.includes(program)
+                    ? 'bg-[var(--leica-orange)] text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
                 >
                   {program}
                 </button>
@@ -199,6 +298,7 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                   Job Opportunity Level
                 </label>
                 <select
+                  name="jobOpportunityLevel"
                   defaultValue={initialData?.jobOpportunityLevel || 'medium'}
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
                 >
@@ -213,6 +313,7 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 </label>
                 <input
                   type="number"
+                  name="studentCount"
                   defaultValue={initialData?.studentCount}
                   placeholder="e.g., 25000"
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
@@ -224,6 +325,7 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 </label>
                 <input
                   type="number"
+                  name="tuitionFee"
                   defaultValue={initialData?.tuitionFee}
                   placeholder="e.g., 5000"
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
@@ -235,6 +337,7 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
                 </label>
                 <input
                   type="date"
+                  name="applicationDeadline"
                   defaultValue={initialData?.applicationDeadline}
                   className="w-full h-10 px-4 border border-gray-200 rounded-lg"
                 />
@@ -296,9 +399,13 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
           {/* Actions */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="space-y-3">
-              <button className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--leica-orange)] text-white rounded-lg hover:bg-[#e67e00]">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 h-10 bg-[var(--leica-orange)] text-white rounded-lg hover:bg-[#e67e00] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Save className="w-4 h-4" />
-                {isEdit ? 'Update School' : 'Create School'}
+                {isSubmitting ? 'Saving...' : (isEdit ? 'Update School' : 'Create School')}
               </button>
               <Link
                 href="/admin/schools"
@@ -310,6 +417,6 @@ export function SchoolForm({ initialData, isEdit = false }: SchoolFormProps) {
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
