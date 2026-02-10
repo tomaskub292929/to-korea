@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:3001": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -31,6 +31,7 @@
     "dotenv": "^17.2.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "firebase-tools": "^15.5.1",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

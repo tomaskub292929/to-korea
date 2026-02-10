@@ -8,7 +8,38 @@ import { SchoolFilter } from '@/components/school/SchoolFilter';
 import { SchoolGrid } from '@/components/school/SchoolGrid';
 import { subscribeToSchools } from '@/lib/services/schoolService';
 import { School } from '@/lib/types';
-import { mockSchools, filterSchools } from '@/data/schools';
+// Filter function for schools
+function filterSchools(
+  schools: School[],
+  filters: {
+    search?: string;
+    region?: string;
+    programs?: string[];
+    jobOpportunityLevel?: string[];
+    minRating?: number;
+  }
+): School[] {
+  return schools.filter(school => {
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      const matchesSearch =
+        school.name.toLowerCase().includes(searchLower) ||
+        school.city.toLowerCase().includes(searchLower) ||
+        (school.programs || []).some(p => p.toLowerCase().includes(searchLower));
+      if (!matchesSearch) return false;
+    }
+    if (filters.region && school.region !== filters.region) return false;
+    if (filters.programs && filters.programs.length > 0) {
+      const hasProgram = filters.programs.some(p => (school.programs || []).includes(p));
+      if (!hasProgram) return false;
+    }
+    if (filters.jobOpportunityLevel && filters.jobOpportunityLevel.length > 0) {
+      if (!filters.jobOpportunityLevel.includes(school.jobOpportunityLevel)) return false;
+    }
+    if (filters.minRating && school.rating < filters.minRating) return false;
+    return true;
+  });
+}
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
@@ -16,6 +47,7 @@ import { ArrowRight } from 'lucide-react';
 export default function Home() {
   const [filteredSchools, setFilteredSchools] = useState<School[]>([]);
   const [allSchools, setAllSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Calculate stats dynamically
   const stats = {
@@ -29,6 +61,7 @@ export default function Home() {
     const unsubscribe = subscribeToSchools((schools) => {
       setAllSchools(schools);
       setFilteredSchools(schools);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -56,7 +89,7 @@ export default function Home() {
       <Header />
 
       {/* Hero Section */}
-      <HeroSection />
+      <HeroSection schools={allSchools} loading={loading} />
 
       {/* Stats Section */}
       <StatsSection stats={stats} />

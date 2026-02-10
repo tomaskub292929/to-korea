@@ -1,12 +1,14 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { mockSchools } from '@/data/schools';
+import { getSchoolById } from '@/lib/services/schoolService';
+import { School } from '@/lib/types';
 import { formatRating, formatStudentCount } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -20,20 +22,58 @@ import {
   Calendar,
   ExternalLink
 } from 'lucide-react';
+import { SchoolReviews } from '@/components/school/SchoolReviews';
 
 export default function SchoolDetailPage() {
   const params = useParams();
   const schoolId = params.id as string;
-  const school = mockSchools.find(s => s.id === schoolId);
 
-  if (!school) {
+  const [school, setSchool] = useState<School | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchSchool() {
+      try {
+        const data = await getSchoolById(schoolId);
+        if (!data) {
+          setError('School not found');
+        } else {
+          setSchool(data);
+        }
+      } catch (err) {
+        console.error('Error fetching school:', err);
+        setError('Failed to load school');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSchool();
+  }, [schoolId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--off-white)]">
+        <Header />
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-[var(--md-primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[var(--warm-gray)]">Loading school...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !school) {
     return (
       <div className="min-h-screen bg-[var(--off-white)]">
         <Header />
         <main className="max-w-7xl mx-auto px-4 py-16 text-center">
           <div className="text-6xl mb-4">🔍</div>
           <h1 className="text-2xl font-bold text-[var(--deep-navy)] mb-4">School Not Found</h1>
-          <p className="text-[var(--warm-gray)] mb-8">The school you're looking for doesn't exist.</p>
+          <p className="text-[var(--warm-gray)] mb-8">{error || "The school you're looking for doesn't exist."}</p>
           <Link href="/schools">
             <Button variant="primary">Browse All Schools</Button>
           </Link>
@@ -153,6 +193,9 @@ export default function SchoolDetailPage() {
                 </div>
               </div>
             </section>
+
+            {/* Reviews Section */}
+            <SchoolReviews schoolId={school.id} schoolName={school.name} />
           </div>
 
           {/* Right Column - Sidebar */}
@@ -163,9 +206,11 @@ export default function SchoolDetailPage() {
               <p className="text-[var(--warm-gray)] text-sm mb-6">
                 Start your journey to {school.name} today.
               </p>
-              <Button variant="primary" className="w-full mb-3">
-                Apply Now
-              </Button>
+              <Link href={`/apply/${school.id}`}>
+                <Button variant="primary" className="w-full mb-3">
+                  Apply Now
+                </Button>
+              </Link>
               {school.websiteUrl && (
                 <a
                   href={school.websiteUrl}
@@ -228,7 +273,7 @@ export default function SchoolDetailPage() {
 
       {/* Footer */}
       <footer className="bg-[var(--deep-navy)] text-white/60 text-center py-6 mt-16">
-        <p>© 2026 Gateway to Korea. All rights reserved.</p>
+        <p>© 2026 InBeam Test. All rights reserved.</p>
       </footer>
     </div>
   );

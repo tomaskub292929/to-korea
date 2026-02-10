@@ -1,103 +1,365 @@
 @import "tailwindcss";
 
-/* Gateway to Korea - Leica Design System */
+/* InBeam Test - Material Design 3 System */
 :root {
-  /* Primary Colors */
-  --leica-orange: #FF8C00;
-  --leica-gold: #FFB347;
+  /* Material Design 3 Primary Colors */
+  --md-primary: #6750A4;
+  --md-on-primary: #FFFFFF;
+  --md-primary-container: #EADDFF;
+  --md-on-primary-container: #21005D;
 
   /* Secondary Colors */
-  --soft-yellow: #FFF8DC;
-  --deep-navy: #1A1A2E;
-  --warm-gray: #7A7A7A;
+  --md-secondary: #625B71;
+  --md-on-secondary: #FFFFFF;
+  --md-secondary-container: #E8DEF8;
+  --md-on-secondary-container: #1D192B;
 
-  /* Accent Colors */
-  --success: #4CAF50;
-  --alert: #FF6B6B;
-  --info: #2196F3;
+  /* Tertiary Colors */
+  --md-tertiary: #7D5260;
+  --md-on-tertiary: #FFFFFF;
+  --md-tertiary-container: #FFD8E4;
+  --md-on-tertiary-container: #31111D;
 
-  /* Background Colors */
-  --off-white: #FAFAF8;
-  --light-cream: #FFF9F0;
+  /* Surface & Background */
+  --md-surface: #FFFBFE;
+  --md-surface-variant: #E7E0EC;
+  --md-on-surface: #1C1B1F;
+  --md-on-surface-variant: #49454F;
+  --md-outline: #79747E;
+  --md-outline-variant: #CAC4D0;
 
-  /* App Colors */
-  --background: var(--off-white);
-  --foreground: var(--deep-navy);
+  /* Error Colors */
+  --md-error: #B3261E;
+  --md-on-error: #FFFFFF;
+  --md-error-container: #F9DEDC;
+
+  /* App Colors (mapped) */
+  --background: var(--md-surface);
+  --foreground: var(--md-on-surface);
+
+  /* Elevation (Box Shadows) */
+  --md-elevation-0: none;
+  --md-elevation-1: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+  --md-elevation-2: 0 1px 2px 0 rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+  --md-elevation-3: 0 4px 8px 3px rgba(0,0,0,0.15), 0 1px 3px 0 rgba(0,0,0,0.3);
+  --md-elevation-4: 0 6px 10px 4px rgba(0,0,0,0.15), 0 2px 3px 0 rgba(0,0,0,0.3);
+  --md-elevation-5: 0 8px 12px 6px rgba(0,0,0,0.15), 0 4px 4px 0 rgba(0,0,0,0.3);
+
+  /* Border Radius (Material 3) */
+  --md-radius-none: 0;
+  --md-radius-xs: 4px;
+  --md-radius-sm: 8px;
+  --md-radius-md: 12px;
+  --md-radius-lg: 16px;
+  --md-radius-xl: 28px;
+  --md-radius-full: 9999px;
+
+  /* Typography Scale (Material 3) */
+  --md-display-large: 57px;
+  --md-display-medium: 45px;
+  --md-display-small: 36px;
+  --md-headline-large: 32px;
+  --md-headline-medium: 28px;
+  --md-headline-small: 24px;
+  --md-title-large: 22px;
+  --md-title-medium: 16px;
+  --md-title-small: 14px;
+  --md-body-large: 16px;
+  --md-body-medium: 14px;
+  --md-body-small: 12px;
+  --md-label-large: 14px;
+  --md-label-medium: 12px;
+  --md-label-small: 11px;
+
+  /* Brand Colors */
+  --leica-orange: #ED4E32; /* Leica Red-Orange */
+  --leica-gold: #D4AF37;
+  --deep-navy: #1B1B3A;
+  --warm-gray: #57534E;
+  --off-white: #F9FAFB;
+  --light-cream: #FEF3C7;
+  --success: #22C55E;
 }
 
 @theme inline {
-  /* Colors */
+  /* Material Colors for Tailwind */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
+  /* Brand Colors */
   --color-leica-orange: var(--leica-orange);
   --color-leica-gold: var(--leica-gold);
-  --color-soft-yellow: var(--soft-yellow);
   --color-deep-navy: var(--deep-navy);
   --color-warm-gray: var(--warm-gray);
-  --color-success: var(--success);
-  --color-alert: var(--alert);
-  --color-info: var(--info);
   --color-off-white: var(--off-white);
   --color-light-cream: var(--light-cream);
+  --color-success: var(--success);
 
-  /* Fonts */
-  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  --font-serif: Georgia, "Playfair Display", serif;
+  --color-md-primary: var(--md-primary);
+  --color-md-on-primary: var(--md-on-primary);
+  --color-md-primary-container: var(--md-primary-container);
+  --color-md-on-primary-container: var(--md-on-primary-container);
+
+  --color-md-secondary: var(--md-secondary);
+  --color-md-on-secondary: var(--md-on-secondary);
+  --color-md-secondary-container: var(--md-secondary-container);
+  --color-md-on-secondary-container: var(--md-on-secondary-container);
+
+  --color-md-tertiary: var(--md-tertiary);
+  --color-md-surface: var(--md-surface);
+  --color-md-surface-variant: var(--md-surface-variant);
+  --color-md-on-surface: var(--md-on-surface);
+  --color-md-on-surface-variant: var(--md-on-surface-variant);
+  --color-md-outline: var(--md-outline);
+  --color-md-outline-variant: var(--md-outline-variant);
+  --color-md-error: var(--md-error);
+
+  /* Fonts - Material uses Roboto, we use Inter as modern alternative */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
 
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
-  --spacing-3xl: 64px;
+  /* Spacing (4px grid system) */
+  --spacing-0: 0;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
 }
 
-/* Typography Scale */
+/* Material Typography Classes */
+.md-display-large {
+  font-size: var(--md-display-large);
+  font-weight: 400;
+  line-height: 64px;
+  letter-spacing: -0.25px;
+}
+
+.md-display-medium {
+  font-size: var(--md-display-medium);
+  font-weight: 400;
+  line-height: 52px;
+  letter-spacing: 0;
+}
+
+.md-display-small {
+  font-size: var(--md-display-small);
+  font-weight: 400;
+  line-height: 44px;
+  letter-spacing: 0;
+}
+
+.md-headline-large {
+  font-size: var(--md-headline-large);
+  font-weight: 400;
+  line-height: 40px;
+  letter-spacing: 0;
+}
+
+.md-headline-medium {
+  font-size: var(--md-headline-medium);
+  font-weight: 400;
+  line-height: 36px;
+  letter-spacing: 0;
+}
+
+.md-headline-small {
+  font-size: var(--md-headline-small);
+  font-weight: 400;
+  line-height: 32px;
+  letter-spacing: 0;
+}
+
+.md-title-large {
+  font-size: var(--md-title-large);
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: 0;
+}
+
+.md-title-medium {
+  font-size: var(--md-title-medium);
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+}
+
+.md-body-large {
+  font-size: var(--md-body-large);
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+}
+
+.md-body-medium {
+  font-size: var(--md-body-medium);
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+}
+
+.md-label-large {
+  font-size: var(--md-label-large);
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+}
+
+/* Material Elevation Classes */
+.md-elevation-1 { box-shadow: var(--md-elevation-1); }
+.md-elevation-2 { box-shadow: var(--md-elevation-2); }
+.md-elevation-3 { box-shadow: var(--md-elevation-3); }
+.md-elevation-4 { box-shadow: var(--md-elevation-4); }
+.md-elevation-5 { box-shadow: var(--md-elevation-5); }
+
+/* Material Button Styles */
+.md-btn-filled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 24px;
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  border-radius: var(--md-radius-full);
+  font-size: var(--md-label-large);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.md-btn-filled:hover {
+  box-shadow: var(--md-elevation-1);
+  opacity: 0.92;
+}
+
+.md-btn-filled:active {
+  opacity: 0.88;
+}
+
+.md-btn-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 24px;
+  background-color: transparent;
+  color: var(--md-primary);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-radius-full);
+  font-size: var(--md-label-large);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.md-btn-outlined:hover {
+  background-color: rgba(103, 80, 164, 0.08);
+}
+
+.md-btn-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 12px;
+  background-color: transparent;
+  color: var(--md-primary);
+  border: none;
+  border-radius: var(--md-radius-full);
+  font-size: var(--md-label-large);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.md-btn-text:hover {
+  background-color: rgba(103, 80, 164, 0.08);
+}
+
+/* Material Card */
+.md-card {
+  background-color: var(--md-surface);
+  border-radius: var(--md-radius-md);
+  padding: 16px;
+}
+
+.md-card-elevated {
+  background-color: var(--md-surface);
+  border-radius: var(--md-radius-md);
+  padding: 16px;
+  box-shadow: var(--md-elevation-1);
+}
+
+.md-card-filled {
+  background-color: var(--md-surface-variant);
+  border-radius: var(--md-radius-md);
+  padding: 16px;
+}
+
+.md-card-outlined {
+  background-color: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-md);
+  padding: 16px;
+}
+
+/* Typography for headings (Material style) */
 h1, .h1 {
-  font-family: Georgia, "Playfair Display", serif;
-  font-size: 48px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--deep-navy);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--md-display-small);
+  font-weight: 400;
+  line-height: 44px;
+  color: var(--md-on-surface);
 }
 
 h2, .h2 {
-  font-family: Georgia, "Playfair Display", serif;
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--leica-orange);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--md-headline-large);
+  font-weight: 400;
+  line-height: 40px;
+  color: var(--md-on-surface);
 }
 
 h3, .h3 {
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.3;
-  color: var(--deep-navy);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--md-headline-small);
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--md-on-surface);
 }
 
 /* Responsive Typography */
 @media (max-width: 768px) {
-  h1, .h1 { font-size: 32px; }
-  h2, .h2 { font-size: 24px; }
-  h3, .h3 { font-size: 18px; }
+  h1, .h1 { font-size: var(--md-headline-large); line-height: 40px; }
+  h2, .h2 { font-size: var(--md-headline-medium); line-height: 36px; }
+  h3, .h3 { font-size: var(--md-title-large); line-height: 28px; }
+  .md-display-large { font-size: var(--md-display-small); line-height: 44px; }
+  .md-display-medium { font-size: var(--md-headline-large); line-height: 40px; }
 }
 
 /* Body */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  line-height: 1.6;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: var(--md-body-large);
+  line-height: 24px;
+  letter-spacing: 0.5px;
 }
 
-/* Focus styles for accessibility */
+/* Focus styles for accessibility (Material style) */
 :focus-visible {
-  outline: 2px solid var(--leica-orange);
+  outline: 2px solid var(--md-primary);
   outline-offset: 2px;
 }
 
@@ -106,8 +368,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Korean text word-break fix */
+html[lang="ko"],
+html[lang="ko"] * {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 /* Selection color */
 ::selection {
-  background-color: var(--leica-gold);
-  color: var(--deep-navy);
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }

@@ -4,20 +4,29 @@ import { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ForgotPasswordPage() {
+  const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      await resetPassword(email);
       setSubmitted(true);
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (submitted) {
@@ -77,6 +86,14 @@ export default function ForgotPasswordPage() {
               No worries! Enter your email and we'll send you reset instructions.
             </p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center gap-3 mb-6">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

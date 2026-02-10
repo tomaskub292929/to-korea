@@ -1,0 +1,255 @@
+{
+  "version": "2.0",
+  "lastUpdated": "2026-02-09T05:48:51.556Z",
+  "activeFeatures": [
+    "to-korea",
+    "authService.ts",
+    "userService.ts",
+    "contexts",
+    "login",
+    "register",
+    "verify-email",
+    "forgot-password",
+    "auth"
+  ],
+  "primaryFeature": "to-korea",
+  "features": {
+    "to-korea": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:18:58.158Z",
+        "lastUpdated": "2026-02-09T02:21:58.585Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/app/layout.tsx"
+    },
+    "authService.ts": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:19:29.560Z",
+        "lastUpdated": "2026-02-09T02:19:29.560Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/lib/services/authService.ts"
+    },
+    "userService.ts": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:20:01.754Z",
+        "lastUpdated": "2026-02-09T02:20:01.754Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/lib/services/userService.ts"
+    },
+    "contexts": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:20:42.853Z",
+        "lastUpdated": "2026-02-09T02:20:42.853Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/contexts/AuthContext.tsx"
+    },
+    "login": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:21:13.597Z",
+        "lastUpdated": "2026-02-09T02:21:13.864Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/app/login/page.tsx"
+    },
+    "register": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:21:41.625Z",
+        "lastUpdated": "2026-02-09T02:21:41.701Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/app/register/page.tsx"
+    },
+    "verify-email": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T02:22:29.374Z",
+        "lastUpdated": "2026-02-09T02:22:29.374Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/app/verify-email/page.tsx"
+    },
+    "forgot-password": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T05:47:18.861Z",
+        "lastUpdated": "2026-02-09T05:47:45.865Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/app/forgot-password/page.tsx"
+    },
+    "auth": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-02-09T05:48:51.556Z",
+        "lastUpdated": "2026-02-09T05:48:51.556Z"
+      },
+      "lastFile": "/Users/sekub/Test_0209/to-korea/src/components/auth/ProtectedRoute.tsx"
+    }
+  },
+  "pipeline": {
+    "currentPhase": 1,
+    "level": "Dynamic",
+    "phaseHistory": []
+  },
+  "session": {
+    "startedAt": "2026-02-09T01:45:11.493Z",
+    "onboardingCompleted": false,
+    "lastActivity": "2026-02-09T05:48:51.556Z"
+  },
+  "history": [
+    {
+      "timestamp": "2026-02-09T02:18:58.158Z",
+      "feature": "to-korea",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:18:58.226Z",
+      "feature": "to-korea",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:19:29.560Z",
+      "feature": "authService.ts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:20:01.754Z",
+      "feature": "userService.ts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:20:42.853Z",
+      "feature": "contexts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:13.597Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:13.684Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:13.736Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:13.805Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:13.864Z",
+      "feature": "login",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:41.625Z",
+      "feature": "register",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:41.701Z",
+      "feature": "register",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:58.435Z",
+      "feature": "to-korea",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:21:58.585Z",
+      "feature": "to-korea",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T02:22:29.374Z",
+      "feature": "verify-email",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T05:47:18.861Z",
+      "feature": "forgot-password",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T05:47:45.865Z",
+      "feature": "forgot-password",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-02-09T05:48:51.556Z",
+      "feature": "auth",
+      "phase": "do",
+      "action": "updated"
+    }
+  ]
+}

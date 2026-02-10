@@ -1,18 +1,348 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 3, 11);
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user is the document owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Get the user's role from their profile document
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Check if user has a specific role
+    function hasRole(role) {
+      return isAuthenticated() && getUserRole() == role;
+    }
+
+    // Check if user has any of the specified roles
+    function hasAnyRole(roles) {
+      return isAuthenticated() && getUserRole() in roles;
+    }
+
+    // Check if user is super admin
+    function isSuperAdmin() {
+      return hasRole('super_admin');
+    }
+
+    // Check if user is any admin role
+    function isAdmin() {
+      return hasAnyRole(['super_admin', 'school_manager', 'content_manager', 'application_manager', 'analyst']);
+    }
+
+    // Check if user can manage schools
+    function canManageSchools() {
+      return hasAnyRole(['super_admin', 'school_manager']);
+    }
+
+    // Check if user can moderate content
+    function canModerateContent() {
+      return hasAnyRole(['super_admin', 'content_manager']);
+    }
+
+    // Check if user can manage applications
+    function canManageApplications() {
+      return hasAnyRole(['super_admin', 'application_manager']);
+    }
+
+    // Check if user can view analytics
+    function canViewAnalytics() {
+      return hasAnyRole(['super_admin', 'analyst']);
+    }
+
+    // Check which fields are being modified
+    function affectedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // Validate email format
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    match /users/{userId} {
+      // Anyone authenticated can read their own profile
+      // Admins can read all profiles
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Users can create their own profile on registration
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'student'  // New users are always students
+        && request.resource.data.keys().hasAll(['id', 'email', 'firstName', 'lastName', 'role'])
+        && isValidEmail(request.resource.data.email);
+
+      // Users can update their own profile EXCEPT role field
+      allow update: if isOwner(userId)
+        && !affectedKeys().hasAny(['role', 'id', 'createdAt']);
+
+      // Only super admin can change user roles
+      allow update: if isSuperAdmin()
+        && affectedKeys().hasOnly(['role', 'updatedAt']);
+
+      // Only super admin can delete users
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================
+    // SCHOOLS COLLECTION
+    // ============================================
+    match /schools/{schoolId} {
+      // Public read access for school listings
+      allow read: if true;
+
+      // Only school managers and super admins can create/update schools
+      allow create: if canManageSchools()
+        && request.resource.data.keys().hasAll(['name', 'type', 'location', 'status']);
+
+      allow update: if canManageSchools();
+
+      // Only super admin can delete schools
+      allow delete: if isSuperAdmin();
+
+      // School programs subcollection
+      match /programs/{programId} {
+        allow read: if true;
+        allow write: if canManageSchools();
+      }
+
+      // School gallery subcollection
+      match /gallery/{imageId} {
+        allow read: if true;
+        allow write: if canManageSchools();
+      }
+    }
+
+    // ============================================
+    // APPLICATIONS COLLECTION
+    // ============================================
+    match /applications/{applicationId} {
+      // Students can read their own applications
+      // Application managers and super admins can read all
+      allow read: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || canManageApplications());
+
+      // Students can create applications for themselves
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'draft'
+        && request.resource.data.keys().hasAll(['userId', 'schoolId', 'programId', 'status']);
+
+      // Students can update their own draft/pending applications
+      // Application managers can update any application status
+      allow update: if isAuthenticated()
+        && (
+          // Student updating their own application (except status changes to admin-only statuses)
+          (resource.data.userId == request.auth.uid
+            && resource.data.status in ['draft', 'pending']
+            && !affectedKeys().hasAny(['userId', 'createdAt']))
+          ||
+          // Application manager updating status
+          (canManageApplications()
+            && affectedKeys().hasAny(['status', 'internalNotes', 'reviewedBy', 'reviewedAt', 'updatedAt']))
+        );
+
+      // Students can delete their own draft applications
+      // Super admin can delete any application
+      allow delete: if isAuthenticated()
+        && (
+          (resource.data.userId == request.auth.uid && resource.data.status == 'draft')
+          || isSuperAdmin()
+        );
+
+      // Application documents subcollection
+      match /documents/{documentId} {
+        allow read: if isAuthenticated()
+          && (get(/databases/$(database)/documents/applications/$(applicationId)).data.userId == request.auth.uid
+              || canManageApplications());
+
+        allow create, update: if isAuthenticated()
+          && get(/databases/$(database)/documents/applications/$(applicationId)).data.userId == request.auth.uid
+          && get(/databases/$(database)/documents/applications/$(applicationId)).data.status in ['draft', 'pending'];
+
+        allow delete: if isAuthenticated()
+          && get(/databases/$(database)/documents/applications/$(applicationId)).data.userId == request.auth.uid
+          && get(/databases/$(database)/documents/applications/$(applicationId)).data.status == 'draft';
+      }
+
+      // Application timeline subcollection
+      match /timeline/{eventId} {
+        allow read: if isAuthenticated()
+          && (get(/databases/$(database)/documents/applications/$(applicationId)).data.userId == request.auth.uid
+              || canManageApplications());
+
+        // Only system/managers can write timeline events
+        allow write: if canManageApplications();
+      }
+    }
+
+    // ============================================
+    // REVIEWS COLLECTION
+    // ============================================
+    match /reviews/{reviewId} {
+      // Public read for approved reviews
+      // Content managers can read all reviews
+      allow read: if resource.data.status == 'approved'
+        || (isAuthenticated() && resource.data.userId == request.auth.uid)
+        || canModerateContent();
+
+      // Authenticated users can create reviews
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.keys().hasAll(['userId', 'schoolId', 'rating', 'content', 'status']);
+
+      // Users can update their own pending reviews
+      // Content managers can moderate (approve/reject)
+      allow update: if isAuthenticated()
+        && (
+          // User updating their own review
+          (resource.data.userId == request.auth.uid
+            && resource.data.status == 'pending'
+            && !affectedKeys().hasAny(['userId', 'status', 'createdAt']))
+          ||
+          // Content manager moderating
+          (canModerateContent()
+            && affectedKeys().hasAny(['status', 'moderatedBy', 'moderatedAt', 'moderationNote']))
+        );
+
+      // Users can delete their own pending reviews
+      // Content managers can delete any review
+      allow delete: if isAuthenticated()
+        && (
+          (resource.data.userId == request.auth.uid && resource.data.status == 'pending')
+          || canModerateContent()
+        );
+    }
+
+    // ============================================
+    // FAVORITES COLLECTION
+    // ============================================
+    match /favorites/{favoriteId} {
+      // Users can only access their own favorites
+      allow read, write: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'schoolId']);
+    }
+
+    // ============================================
+    // NOTIFICATIONS COLLECTION
+    // ============================================
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+
+      // Users can update read status of their own notifications
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && affectedKeys().hasOnly(['isRead', 'readAt']);
+
+      // Users can delete their own notifications
+      allow delete: if isAuthenticated()
+        && resource.data.userId == request.auth.uid;
+
+      // Only backend/cloud functions create notifications
+      // Client-side creation is not allowed for security
+      allow create: if false;
+    }
+
+    // ============================================
+    // ADMIN LOGS COLLECTION (Audit Trail)
+    // ============================================
+    match /admin_logs/{logId} {
+      // Only super admins can read audit logs
+      allow read: if isSuperAdmin();
+
+      // Logs are created by cloud functions only
+      allow write: if false;
+    }
+
+    // ============================================
+    // SETTINGS COLLECTION (App Configuration)
+    // ============================================
+    match /settings/{settingId} {
+      // Public settings are readable by all
+      allow read: if resource.data.isPublic == true || isAdmin();
+
+      // Only super admin can modify settings
+      allow write: if isSuperAdmin();
+    }
+
+    // ============================================
+    // ANALYTICS COLLECTION (Aggregated Data)
+    // ============================================
+    match /analytics/{docId} {
+      // Analysts and super admins can read
+      allow read: if canViewAnalytics();
+
+      // Only cloud functions write analytics
+      allow write: if false;
+    }
+
+    // ============================================
+    // COUNTRIES/REGIONS REFERENCE DATA
+    // ============================================
+    match /countries/{countryId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    match /regions/{regionId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // ============================================
+    // PROGRAM TYPES REFERENCE DATA
+    // ============================================
+    match /program_types/{typeId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // ============================================
+    // STUDENTS COLLECTION (Public Form Submissions)
+    // PRD: 외부 학생들로부터 정보 수집 (로그인 불필요)
+    // ============================================
+    match /students/{studentId} {
+      // 퍼블릭 생성: 로그인 없이 누구나 학생 정보 등록 가능
+      allow create: if true
+        && request.resource.data.keys().hasAll(['name', 'phone', 'content', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.phone is string
+        && request.resource.data.content is string
+        && request.resource.data.content.size() >= 10;
+
+      // 읽기: 임시로 전체 허용 (테스트용, 프로덕션에서는 isAdmin()으로 변경)
+      // TODO: 프로덕션 배포 전 isAdmin()으로 변경 필요
+      allow read: if true;
+
+      // 수정: 임시로 전체 허용 (테스트용)
+      allow update: if true;
+
+      // 삭제: 임시로 전체 허용 (테스트용)
+      allow delete: if true;
     }
   }
 }

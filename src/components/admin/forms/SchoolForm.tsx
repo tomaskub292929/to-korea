@@ -9,6 +9,7 @@ import { School } from '@/lib/types';
 
 interface SchoolFormProps {
   initialData?: {
+    id?: string;
     name: string;
     nameRu?: string;
     nameDe?: string;
@@ -21,9 +22,13 @@ interface SchoolFormProps {
     programs: string[];
     jobOpportunityLevel: string;
     studentCount: number;
+    rating?: number;
     tuitionFee?: number;
     applicationDeadline?: string;
     semesterStart?: string;
+    headerImageUrl?: string;
+    logoUrl?: string;
+    oneLineFeedback?: string;
   };
   isEdit?: boolean;
 }

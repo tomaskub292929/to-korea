@@ -48,6 +48,7 @@ export interface Review {
 }
 
 export interface User {
+  // Core fields
   id: string;
   email: string;
   firstName: string;
@@ -63,6 +64,13 @@ export interface User {
   profileCompleted: boolean;
   createdAt: string;
   updatedAt?: string;
+
+  // Auth fields
+  role: UserRole;
+  emailVerified: boolean;
+  photoURL?: string;
+  authProviders: AuthProvider[];
+  lastLoginAt?: string;
 }
 
 export interface Application {
@@ -88,4 +96,39 @@ export interface LocalizedContent {
   en: string;
   ru: string;
   de: string;
+}
+
+// Auth types
+export type UserRole =
+  | 'student'              // Default for all registrations
+  | 'super_admin'          // Full access + role assignment
+  | 'school_manager'       // Schools CRUD
+  | 'content_manager'      // Reviews moderation
+  | 'application_manager'  // Applications processing
+  | 'analyst';             // Read-only analytics
+
+export interface AuthProvider {
+  providerId: 'password' | 'google.com' | 'facebook.com';
+  email: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  country: string;
+  agreeTerms: boolean;
 }

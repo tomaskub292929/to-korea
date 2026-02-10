@@ -1,12 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { ArrowLeft, User, Mail, Lock, Eye, EyeOff, Globe, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -17,14 +22,42 @@ export default function RegisterPage() {
     agreeTerms: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate terms agreement
+    if (!formData.agreeTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
+    setError('');
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        country: formData.country,
+        agreeTerms: formData.agreeTerms,
+      });
+
+      setSuccess(true);
+
+      // Redirect to verification reminder page after 2 seconds
+      setTimeout(() => {
+        router.push('/verify-email');
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      alert('Registration functionality will be implemented with Supabase integration.');
-    }, 1000);
+    }
   };
 
   const updateField = (field: string, value: string | boolean) => {
@@ -91,6 +124,20 @@ export default function RegisterPage() {
               <h1 className="text-2xl font-bold text-[var(--deep-navy)]">Create Account</h1>
               <p className="text-[var(--warm-gray)] mt-2">Join 10,000+ students</p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+              </div>
+            )}
+
+            {/* Success Message */}
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+                Account created successfully! A verification email has been sent. Redirecting...
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name Fields */}

@@ -6,7 +6,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal, Plus, Star, CheckCircle, XCircle, Edit, Trash2, Eye } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/layout';
 import { DataTable } from '@/components/admin/tables/DataTable';
-import { subscribeToSchools, deleteSchool } from '@/lib/services/schoolService';
+import { subscribeToSchools, deleteSchool, resetSchoolsFromMock } from '@/lib/services/schoolService';
 import { School } from '@/lib/types';
 
 interface SchoolRow {
@@ -58,6 +58,19 @@ export default function SchoolsPage() {
         alert('✅ School deleted successfully!');
       } catch (error) {
         alert('❌ Failed to delete school');
+      }
+    }
+  };
+
+  const handleResetSchools = async () => {
+    if (confirm('⚠️ This will delete all existing schools and re-initialize with sample data. Continue?')) {
+      try {
+        setLoading(true);
+        const count = await resetSchoolsFromMock();
+        alert(`✅ Successfully initialized ${count} schools!`);
+      } catch (error) {
+        alert('❌ Failed to reset schools');
+        console.error(error);
       }
     }
   };
@@ -226,13 +239,21 @@ export default function SchoolsPage() {
             <option value="incheon">Incheon</option>
           </select>
         </div>
-        <Link
-          href="/admin/schools/new"
-          className="flex items-center gap-2 h-10 px-4 bg-[var(--leica-orange)] text-white rounded-lg hover:bg-[#e67e00] transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add School
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleResetSchools}
+            className="flex items-center gap-2 h-10 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+          >
+            🔄 Reset Sample Data
+          </button>
+          <Link
+            href="/admin/schools/new"
+            className="flex items-center gap-2 h-10 px-4 bg-[var(--leica-orange)] text-white rounded-lg hover:bg-[#e67e00] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add School
+          </Link>
+        </div>
       </div>
 
       {/* Data Table */}

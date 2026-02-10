@@ -1,6 +1,7 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -15,62 +16,123 @@ import {
   Globe,
   Calendar,
   MessageSquare,
+  AlertCircle,
+  DollarSign,
+  Eye,
 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/layout';
+import { subscribeToApplication, updateApplicationStatus } from '@/lib/services/applicationService';
+import type { Application, ApplicationStatus } from '@/lib/types/application';
+import { EDUCATION_LEVELS, LANGUAGE_TESTS, NATIONALITIES } from '@/lib/types/application';
 
-// Mock application data
-const applicationData = {
-  id: 'A001',
-  applicant: {
-    name: 'Anna Mueller',
-    email: 'anna.mueller@gmail.com',
-    phone: '+49-xxx-xxxx',
-    country: 'Germany',
-    countryCode: 'DE',
-  },
-  application: {
-    school: 'Seoul National University',
-    program: 'Computer Science',
-    degree: "Master's",
-    semester: 'Fall 2026',
-  },
-  education: {
-    degree: "Bachelor's in Computer Science",
-    university: 'Technical University of Munich',
-    gpa: '3.8 / 4.0',
-    graduationYear: '2025',
-  },
-  languages: {
-    topik: 'Level 4',
-    ielts: '7.5',
-    native: 'German',
-  },
-  documents: [
-    { name: 'Transcript.pdf', size: '2.4 MB', uploaded: '2026-02-01' },
-    { name: 'Recommendation_Letter_1.pdf', size: '1.2 MB', uploaded: '2026-02-01' },
-    { name: 'Personal_Statement.pdf', size: '890 KB', uploaded: '2026-02-01' },
-    { name: 'TOPIK_Certificate.pdf', size: '1.5 MB', uploaded: '2026-02-01' },
-    { name: 'IELTS_Score.pdf', size: '1.1 MB', uploaded: '2026-02-01' },
-  ],
-  motivation: `I am passionate about AI research and Korea's leading position in technology innovation.
-  Seoul National University's Computer Science program offers the perfect environment for my academic
-  and professional growth. I am particularly interested in working with Professor Kim's research lab
-  on natural language processing.`,
-  timeline: [
-    { date: '2026-02-05 10:30', action: 'Documents reviewed', by: 'Kim' },
-    { date: '2026-02-03 15:45', action: 'Additional documents requested', by: 'Lee' },
-    { date: '2026-02-01 09:15', action: 'Application submitted', by: 'System' },
-  ],
-  status: 'under_review',
-  priority: 'high',
+const statusConfig: Record<ApplicationStatus, { label: string; icon: React.ElementType; bg: string; text: string }> = {
+  draft: { label: 'Draft', icon: FileText, bg: 'bg-gray-100', text: 'text-gray-700' },
+  submitted: { label: 'Submitted', icon: Clock, bg: 'bg-blue-100', text: 'text-blue-700' },
+  paid: { label: 'Paid', icon: DollarSign, bg: 'bg-green-100', text: 'text-green-700' },
+  under_review: { label: 'Under Review', icon: Eye, bg: 'bg-amber-100', text: 'text-amber-700' },
+  accepted: { label: 'Accepted', icon: CheckCircle, bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  rejected: { label: 'Rejected', icon: XCircle, bg: 'bg-red-100', text: 'text-red-700' },
 };
 
 export default function ApplicationDetailPage() {
   const params = useParams();
-  const id = params.id;
+  const router = useRouter();
+  const id = params.id as string;
+
+  const [application, setApplication] = useState<Application | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+
+    const unsubscribe = subscribeToApplication(id, (data) => {
+      if (data) {
+        setApplication(data);
+        setError('');
+      } else {
+        setError('Application not found');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [id]);
+
+  const handleStatusChange = async (newStatus: ApplicationStatus) => {
+    if (!application) return;
+
+    setUpdating(true);
+    try {
+      await updateApplicationStatus(id, newStatus);
+      // No need to manually update state - real-time subscription will handle it
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Failed to update status');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const getNationalityLabel = (value: string) => {
+    const nation = NATIONALITIES.find(n => n.value === value);
+    return nation?.label || value;
+  };
+
+  const getEducationLabel = (value: string) => {
+    const edu = EDUCATION_LEVELS.find(e => e.value === value);
+    return edu?.label || value;
+  };
+
+  const getLanguageTestLabel = (value: string) => {
+    const test = LANGUAGE_TESTS.find(t => t.value === value);
+    return test?.label || value;
+  };
+
+  const formatDate = (date: any) => {
+    if (!date) return '-';
+    const dateObj = typeof date === 'object' && 'toDate' in date
+      ? date.toDate()
+      : new Date(date);
+    return dateObj.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout title="Application Details" subtitle="Loading...">
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-[var(--md-primary)] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error || !application) {
+    return (
+      <AdminLayout title="Application Details" subtitle="Error">
+        <div className="flex flex-col items-center justify-center h-64">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <p className="text-red-600 mb-4">{error || 'Application not found'}</p>
+          <Link href="/admin/applications" className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
+            Back to Applications
+          </Link>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const currentStatus = statusConfig[application.status] || statusConfig.draft;
+  const StatusIcon = currentStatus.icon;
 
   return (
-    <AdminLayout title={`Application #${id}`} subtitle="Application Details">
+    <AdminLayout title={`Application #${id.slice(0, 8)}`} subtitle="Application Details">
       {/* Back Button */}
       <Link
         href="/admin/applications"
@@ -92,19 +154,35 @@ export default function ApplicationDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Full Name</p>
-                <p className="font-medium">{applicationData.applicant.name}</p>
+                <p className="font-medium">
+                  {application.firstName && application.lastName
+                    ? `${application.firstName} ${application.lastName}`
+                    : <span className="text-gray-400">Not provided</span>}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{applicationData.applicant.email}</p>
+                <p className="font-medium">{application.email || <span className="text-gray-400">Not provided</span>}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium">{applicationData.applicant.phone}</p>
+                <p className="font-medium">{application.phone || <span className="text-gray-400">Not provided</span>}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Country</p>
-                <p className="font-medium">🇩🇪 {applicationData.applicant.country}</p>
+                <p className="text-sm text-gray-500">Nationality</p>
+                <p className="font-medium">
+                  {application.nationality
+                    ? getNationalityLabel(application.nationality)
+                    : <span className="text-gray-400">Not provided</span>}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Date of Birth</p>
+                <p className="font-medium">{application.dateOfBirth || <span className="text-gray-400">Not provided</span>}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Gender</p>
+                <p className="font-medium capitalize">{application.gender || <span className="text-gray-400">Not provided</span>}</p>
               </div>
             </div>
           </div>
@@ -118,19 +196,19 @@ export default function ApplicationDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">School</p>
-                <p className="font-medium">{applicationData.application.school}</p>
+                <p className="font-medium">{application.schoolName}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Program</p>
-                <p className="font-medium">{applicationData.application.program}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Degree</p>
-                <p className="font-medium">{applicationData.application.degree}</p>
+                <p className="font-medium">{application.intendedProgram || <span className="text-gray-400">Not selected</span>}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Target Semester</p>
-                <p className="font-medium">{applicationData.application.semester}</p>
+                <p className="font-medium">{application.intendedSemester || <span className="text-gray-400">Not selected</span>}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Current Step</p>
+                <p className="font-medium">Step {application.currentStep} of 3</p>
               </div>
             </div>
           </div>
@@ -140,20 +218,28 @@ export default function ApplicationDetailPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Education Background</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Previous Degree</p>
-                <p className="font-medium">{applicationData.education.degree}</p>
+                <p className="text-sm text-gray-500">Education Level</p>
+                <p className="font-medium">
+                  {application.educationLevel
+                    ? getEducationLabel(application.educationLevel)
+                    : <span className="text-gray-400">Not provided</span>}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">University</p>
-                <p className="font-medium">{applicationData.education.university}</p>
+                <p className="text-sm text-gray-500">Previous School</p>
+                <p className="font-medium">{application.schoolNamePrevious || <span className="text-gray-400">Not provided</span>}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">GPA</p>
-                <p className="font-medium">{applicationData.education.gpa}</p>
+                <p className="text-sm text-gray-500">Major</p>
+                <p className="font-medium">{application.major || <span className="text-gray-400">Not provided</span>}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Graduation Year</p>
-                <p className="font-medium">{applicationData.education.graduationYear}</p>
+                <p className="font-medium">{application.graduationYear || <span className="text-gray-400">Not provided</span>}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">GPA</p>
+                <p className="font-medium">{application.gpa || <span className="text-gray-400">Not provided</span>}</p>
               </div>
             </div>
           </div>
@@ -164,56 +250,31 @@ export default function ApplicationDetailPage() {
               <Globe className="w-5 h-5" />
               Language Proficiency
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">TOPIK</p>
-                <p className="font-medium">{applicationData.languages.topik}</p>
+                <p className="text-sm text-gray-500">Language Test</p>
+                <p className="font-medium">
+                  {application.languageTest
+                    ? getLanguageTestLabel(application.languageTest)
+                    : <span className="text-gray-400">None</span>}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">IELTS</p>
-                <p className="font-medium">{applicationData.languages.ielts}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Native Language</p>
-                <p className="font-medium">{applicationData.languages.native}</p>
+                <p className="text-sm text-gray-500">Score</p>
+                <p className="font-medium">{application.languageScore || <span className="text-gray-400">-</span>}</p>
               </div>
             </div>
           </div>
 
           {/* Motivation */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Motivation Statement</h3>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {applicationData.motivation}
-            </p>
-          </div>
-
-          {/* Documents */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Submitted Documents
-            </h3>
-            <div className="space-y-3">
-              {applicationData.documents.map((doc, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-xs text-gray-500">{doc.size} • {doc.uploaded}</p>
-                    </div>
-                  </div>
-                  <button className="p-2 hover:bg-gray-200 rounded-lg">
-                    <Download className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-              ))}
+          {application.motivation && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Motivation Statement</h3>
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {application.motivation}
+              </p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -223,29 +284,44 @@ export default function ApplicationDetailPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Status</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-500" />
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                  Under Review
+                <StatusIcon className={`w-5 h-5 ${currentStatus.text}`} />
+                <span className={`px-3 py-1 ${currentStatus.bg} ${currentStatus.text} rounded-full text-sm font-medium`}>
+                  {currentStatus.label}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-red-500 rounded-full" />
-                <span className="text-sm text-gray-600">High Priority</span>
-              </div>
+
+              {application.paymentAmount && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-green-500" />
+                  <span className="text-green-600 font-medium">${application.paymentAmount} paid</span>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 space-y-2">
-              <button className="w-full flex items-center justify-center gap-2 h-10 bg-green-500 text-white rounded-lg hover:bg-green-600">
+              <button
+                onClick={() => handleStatusChange('under_review')}
+                disabled={updating || application.status === 'under_review'}
+                className="w-full flex items-center justify-center gap-2 h-10 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50"
+              >
+                <Eye className="w-4 h-4" />
+                Mark Under Review
+              </button>
+              <button
+                onClick={() => handleStatusChange('accepted')}
+                disabled={updating || application.status === 'accepted'}
+                className="w-full flex items-center justify-center gap-2 h-10 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+              >
                 <CheckCircle className="w-4 h-4" />
                 Accept
               </button>
-              <button className="w-full flex items-center justify-center gap-2 h-10 bg-red-500 text-white rounded-lg hover:bg-red-600">
+              <button
+                onClick={() => handleStatusChange('rejected')}
+                disabled={updating || application.status === 'rejected'}
+                className="w-full flex items-center justify-center gap-2 h-10 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+              >
                 <XCircle className="w-4 h-4" />
                 Reject
-              </button>
-              <button className="w-full flex items-center justify-center gap-2 h-10 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
-                <FileText className="w-4 h-4" />
-                Request Documents
               </button>
               <button className="w-full flex items-center justify-center gap-2 h-10 border border-gray-200 rounded-lg hover:bg-gray-50">
                 <Mail className="w-4 h-4" />
@@ -258,18 +334,34 @@ export default function ApplicationDetailPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Review Timeline
+              Timeline
             </h3>
             <div className="space-y-4">
-              {applicationData.timeline.map((item, index) => (
-                <div key={index} className="flex gap-3">
-                  <div className="w-2 h-2 mt-2 bg-gray-300 rounded-full" />
+              {application.paidAt && (
+                <div className="flex gap-3">
+                  <div className="w-2 h-2 mt-2 bg-green-500 rounded-full" />
                   <div>
-                    <p className="text-sm text-gray-900">{item.action}</p>
-                    <p className="text-xs text-gray-500">{item.date} • {item.by}</p>
+                    <p className="text-sm text-gray-900">Payment completed</p>
+                    <p className="text-xs text-gray-500">{formatDate(application.paidAt)}</p>
                   </div>
                 </div>
-              ))}
+              )}
+              {application.submittedAt && (
+                <div className="flex gap-3">
+                  <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full" />
+                  <div>
+                    <p className="text-sm text-gray-900">Application submitted</p>
+                    <p className="text-xs text-gray-500">{formatDate(application.submittedAt)}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <div className="w-2 h-2 mt-2 bg-gray-300 rounded-full" />
+                <div>
+                  <p className="text-sm text-gray-900">Application created</p>
+                  <p className="text-xs text-gray-500">{formatDate(application.createdAt)}</p>
+                </div>
+              </div>
             </div>
           </div>
 

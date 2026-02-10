@@ -4,6 +4,7 @@ import {
     getDocs,
     getDoc,
     addDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
     onSnapshot,
@@ -35,6 +36,7 @@ export async function getAllSchools(): Promise<School[]> {
 
 /**
  * Get a single school by ID
+ * Falls back to mock data if not found in Firestore
  */
 export async function getSchoolById(id: string): Promise<School | null> {
     try {
@@ -44,10 +46,25 @@ export async function getSchoolById(id: string): Promise<School | null> {
         if (docSnap.exists()) {
             return { id: docSnap.id, ...docSnap.data() } as School;
         }
+
+        // Fallback to mock data if not found in Firestore
+        const { mockSchools } = await import('@/data/schools');
+        const mockSchool = mockSchools.find(s => s.id === id);
+        if (mockSchool) {
+            return mockSchool;
+        }
+
         return null;
     } catch (error) {
         console.error('Error fetching school:', error);
-        throw error;
+        // Fallback to mock data on error
+        try {
+            const { mockSchools } = await import('@/data/schools');
+            const mockSchool = mockSchools.find(s => s.id === id);
+            return mockSchool || null;
+        } catch {
+            return null;
+        }
     }
 }
 
@@ -116,6 +133,7 @@ export function subscribeToSchools(callback: (schools: School[]) => void): () =>
 
 /**
  * Subscribe to real-time updates for a single school
+ * Falls back to mock data if not found in Firestore
  */
 export function subscribeToSchool(
     id: string,
@@ -123,13 +141,92 @@ export function subscribeToSchool(
 ): () => void {
     const docRef = doc(db, COLLECTION_NAME, id);
 
-    return onSnapshot(docRef, (docSnap) => {
+    return onSnapshot(docRef, async (docSnap) => {
         if (docSnap.exists()) {
             callback({ id: docSnap.id, ...docSnap.data() } as School);
         } else {
-            callback(null);
+            // Fallback to mock data if not found in Firestore
+            const { mockSchools } = await import('@/data/schools');
+            const mockSchool = mockSchools.find(s => s.id === id);
+            callback(mockSchool || null);
         }
-    }, (error) => {
+    }, async (error) => {
         console.error('Error in school subscription:', error);
+        // Fallback to mock data on error
+        const { mockSchools } = await import('@/data/schools');
+        const mockSchool = mockSchools.find(s => s.id === id);
+        callback(mockSchool || null);
     });
+}
+
+/**
+ * Initialize Firestore with mock data (one-time setup)
+ * Preserves original school IDs for consistent routing
+ */
+export async function initializeSchoolsFromMock(): Promise<number> {
+    try {
+        const { mockSchools } = await import('@/data/schools');
+        const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+
+        if (!snapshot.empty) {
+            console.log('Schools already exist in Firestore');
+            return 0;
+        }
+
+        console.log('Initializing schools from mock data...');
+        let count = 0;
+
+        for (const school of mockSchools) {
+            const { id, ...schoolData } = school;
+            // Use setDoc with original ID to preserve consistent routing
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await setDoc(docRef, {
+                ...schoolData,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            });
+            count++;
+        }
+
+        console.log(`Initialized ${count} schools in Firestore`);
+        return count;
+    } catch (error) {
+        console.error('Error initializing schools:', error);
+        throw error;
+    }
+}
+
+/**
+ * Re-initialize schools (force reset with original IDs)
+ */
+export async function resetSchoolsFromMock(): Promise<number> {
+    try {
+        const { mockSchools } = await import('@/data/schools');
+
+        // Delete all existing schools
+        const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+        for (const docSnap of snapshot.docs) {
+            await deleteDoc(doc(db, COLLECTION_NAME, docSnap.id));
+        }
+
+        console.log('Re-initializing schools from mock data...');
+        let count = 0;
+
+        for (const school of mockSchools) {
+            const { id, ...schoolData } = school;
+            const docRef = doc(db, COLLECTION_NAME, id);
+            await setDoc(docRef, {
+                ...schoolData,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            });
+            count++;
+        }
+
+        console.log(`Re-initialized ${count} schools in Firestore`);
+        return count;
+    } catch (error) {
+        console.error('Error re-initializing schools:', error);
+        throw error;
+    }
 }
