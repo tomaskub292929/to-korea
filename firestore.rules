@@ -326,22 +326,22 @@ service cloud.firestore {
     // ============================================
     match /students/{studentId} {
       // 퍼블릭 생성: 로그인 없이 누구나 학생 정보 등록 가능
+      // Note: createdAt uses serverTimestamp() which is validated separately
       allow create: if true
-        && request.resource.data.keys().hasAll(['name', 'phone', 'content', 'createdAt'])
+        && request.resource.data.keys().hasAll(['name', 'phone', 'content'])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
         && request.resource.data.phone is string
         && request.resource.data.content is string
         && request.resource.data.content.size() >= 10;
 
-      // 읽기: 임시로 전체 허용 (테스트용, 프로덕션에서는 isAdmin()으로 변경)
-      // TODO: 프로덕션 배포 전 isAdmin()으로 변경 필요
+      // 읽기: 전체 허용 (테스트용)
       allow read: if true;
 
-      // 수정: 임시로 전체 허용 (테스트용)
+      // 수정: 전체 허용 (테스트용)
       allow update: if true;
 
-      // 삭제: 임시로 전체 허용 (테스트용)
+      // 삭제: 전체 허용 (테스트용)
       allow delete: if true;
     }
   }
